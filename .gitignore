@@ -13,6 +13,12 @@ pnpm-debug.log*
 # Prisma
 /prisma/migrations/
 
+# Prisma generated client
+generated/
+src/generated/
+src/generated/prisma/
+
+
 # Build outputs (Next.js)
 .next/
 out/
