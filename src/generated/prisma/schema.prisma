@@ -1,0 +1,192 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ======================================================
+// PATIENTS
+// ======================================================
+model patients {
+  patient_id         String    @id @default(uuid())
+  wallet_did         String?   @unique
+  full_name          String
+  birth_date         DateTime?
+  gender             String?
+  blood_type         String?
+  contact_phone      String?
+  address            String?
+  emergency_contact  Json?
+  insurance          Json?
+  allergies          Json?
+  chronic_conditions Json?
+  created_at         DateTime  @default(now())
+  updated_at         DateTime  @default(now())
+
+  visits          visits[]
+  access_controls access_controls[]
+  audit_logs      audit_access_logs[]
+}
+
+// ======================================================
+// PROVIDERS
+// ======================================================
+model providers {
+  provider_id    String   @id @default(uuid())
+  name           String
+  address        String?
+  contact_phone  String?
+  type           String?
+  license_number String?
+  metadata       Json?
+  created_at     DateTime @default(now())
+
+  doctors doctors[]
+  visits  visits[]
+}
+
+// ======================================================
+// DOCTORS
+// ======================================================
+model doctors {
+  doctor_id    String   @id @default(uuid())
+  provider_id  String?
+  full_name    String
+  specialty    String?
+  license_no   String?
+  contact      String?
+  profile_meta Json?
+  created_at   DateTime @default(now())
+
+  provider      providers?      @relation(fields: [provider_id], references: [provider_id])
+  visits        visits[]
+  prescriptions prescriptions[]
+}
+
+// ======================================================
+// VISITS
+// ======================================================
+model visits {
+  visit_id            String   @id @default(uuid())
+  patient_id          String?
+  provider_id         String?
+  doctor_id           String?
+  visit_timestamp     DateTime @default(now())
+  visit_type          String?
+  chief_complaint     String?
+  clinical_notes_hash String?
+  clinical_notes_enc  String?
+  billing_id          String?
+  created_at          DateTime @default(now())
+
+  patient  patients?  @relation(fields: [patient_id], references: [patient_id])
+  provider providers? @relation(fields: [provider_id], references: [provider_id])
+  doctor   doctors?   @relation(fields: [doctor_id], references: [doctor_id])
+
+  diagnoses     diagnoses[]
+  prescriptions prescriptions[]
+  labs          labs[]
+  files         files[]
+}
+
+// ======================================================
+// DIAGNOSES
+// ======================================================
+model diagnoses {
+  dx_id       String   @id @default(uuid())
+  visit_id    String?
+  code_icd10  String?
+  description String?
+  severity    String?
+  created_at  DateTime @default(now())
+
+  visit visits? @relation(fields: [visit_id], references: [visit_id])
+}
+
+// ======================================================
+// PRESCRIPTIONS
+// ======================================================
+model prescriptions {
+  presc_id        String   @id @default(uuid())
+  visit_id        String?
+  medications     Json?
+  presc_issued_by String?
+  presc_hash      String?
+  created_at      DateTime @default(now())
+
+  visit  visits?  @relation(fields: [visit_id], references: [visit_id])
+  doctor doctors? @relation(fields: [presc_issued_by], references: [doctor_id])
+}
+
+// ======================================================
+// LABS
+// ======================================================
+model labs {
+  lab_id       String   @id @default(uuid())
+  visit_id     String?
+  lab_type     String?
+  results_enc  String?
+  results_hash String?
+  attachments  Json?
+  created_at   DateTime @default(now())
+
+  visit visits? @relation(fields: [visit_id], references: [visit_id])
+}
+
+// ======================================================
+// FILES
+// ======================================================
+model files {
+  file_id      String   @id @default(uuid())
+  owner_id     String
+  visit_id     String?
+  file_type    String?
+  storage_path String?
+  file_hash    String?
+  created_at   DateTime @default(now())
+
+  visit visits? @relation(fields: [visit_id], references: [visit_id])
+}
+
+// ======================================================
+// ACCESS CONTROLS
+// ======================================================
+model access_controls {
+  ac_id       String    @id @default(uuid())
+  patient_id  String?
+  granted_to  String
+  granted_by  String?
+  scope       Json?
+  valid_from  DateTime?
+  valid_to    DateTime?
+  on_chain_tx String?
+  created_at  DateTime  @default(now())
+
+  patient patients? @relation(fields: [patient_id], references: [patient_id])
+}
+
+// ======================================================
+// AUDIT ACCESS LOGS
+// ======================================================
+model audit_access_logs {
+  log_id           String   @id @default(uuid())
+  patient_id       String?
+  accessed_by      String
+  resource_type    String?
+  resource_id      String?
+  access_timestamp DateTime @default(now())
+  on_chain_anchor  String?
+  created_at       DateTime @default(now())
+
+  patient patients? @relation(fields: [patient_id], references: [patient_id])
+}
