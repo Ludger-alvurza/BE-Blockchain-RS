@@ -2,6 +2,7 @@
 import express from "express";
 import cors from "cors";
 import patientRoutes from "./src/routes/patientRoutes.js";
+import accessControlRoutes from "./src/routes/accessControlRoutes.js";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -19,7 +20,11 @@ app.get("/", (req, res) => {
   });
 });
 
+// Patient routes
 app.use("/patients", patientRoutes);
+
+// Access Control routes
+app.use("/access-controls", accessControlRoutes);
 
 // Start server
 app.listen(PORT, () => {
