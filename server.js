@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import patientRoutes from "./src/routes/patientRoutes.js";
 import accessControlRoutes from "./src/routes/accessControlRoutes.js";
+import doctorRoutes from "./src/routes/doctorRoutes.js";
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -25,6 +26,9 @@ app.use("/patients", patientRoutes);
 
 // Access Control routes
 app.use("/access-controls", accessControlRoutes);
+
+// Doctor routes
+app.use("/doctors", doctorRoutes);
 
 // Start server
 app.listen(PORT, () => {
